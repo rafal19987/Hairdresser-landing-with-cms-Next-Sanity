@@ -50,3 +50,31 @@ export interface BookingResult {
   uuid: string;
   status: "pending" | "confirmed";
 }
+
+export type AppointmentStatus =
+  | "pending"
+  | "confirmed"
+  | "rescheduled"
+  | "cancelled"
+  | "completed";
+
+export interface ManagedAppointment {
+  uuid: string;
+  status: AppointmentStatus;
+  startsAt: string;
+  endsAt: string;
+  serviceId: string | null;
+  serviceName: string;
+  employeeId: string | null;
+  employeeName: string | null;
+  price: number | null;
+  duration: number;
+  // Last moment the client may cancel or reschedule; null when it is no longer possible
+  changeableUntil: string | null;
+}
+
+export interface ManagedAppointments {
+  email: string;
+  upcoming: ManagedAppointment[];
+  past: ManagedAppointment[];
+}

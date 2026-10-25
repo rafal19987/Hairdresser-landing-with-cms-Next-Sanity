@@ -57,3 +57,8 @@ export const bookableDays = (salon: SalonSettings, now = new Date()) => {
     addDays(today, i),
   );
 };
+
+export const firstOpenDay = (
+  salon: SalonSettings,
+  days: string[],
+): string | null => days.find((day) => !isSalonClosed(salon, day)) ?? null;
