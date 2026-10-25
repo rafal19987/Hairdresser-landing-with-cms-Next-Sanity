@@ -20,7 +20,14 @@ export class BookingApiError extends Error {
   }
 }
 
-const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
+export type ApiSender = <T>(path: string, init?: RequestInit) => Promise<T>;
+
+// Most endpoints wrap their payload in `data`; client auth endpoints return it directly
+export const request = async <T>(
+  path: string,
+  init?: RequestInit,
+  unwrap = true,
+): Promise<T> => {
   let response: Response;
 
   try {
@@ -49,7 +56,7 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
     );
   }
 
-  return body.data as T;
+  return (unwrap ? body?.data : body) as T;
 };
 
 export const bookingApi = {
@@ -71,32 +78,27 @@ export const bookingApi = {
     );
   },
 
-  createBooking: (payload: BookingPayload) =>
-    request<BookingResult>("/booking/appointments", {
+  // A logged-in client books through an authorized sender, guests through the plain one
+  createBooking: (payload: BookingPayload, send: ApiSender = request) =>
+    send<BookingResult>("/booking/appointments", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
 };
 
 // The emailed link and the client account expose the same operations on different paths
-export const createAppointmentsApi = (
-  basePath: string,
-  headers: Record<string, string>,
-) => ({
-  list: () =>
-    request<ManagedAppointments>(`${basePath}/appointments`, { headers }),
+export const createAppointmentsApi = (basePath: string, send: ApiSender) => ({
+  list: () => send<ManagedAppointments>(`${basePath}/appointments`),
 
   cancel: (uuid: string, reason?: string) =>
-    request<unknown>(`${basePath}/appointments/${uuid}/cancel`, {
+    send<unknown>(`${basePath}/appointments/${uuid}/cancel`, {
       method: "PATCH",
-      headers,
       body: JSON.stringify({ reason: reason || undefined }),
     }),
 
   reschedule: (uuid: string, startsAt: string) =>
-    request<unknown>(`${basePath}/appointments/${uuid}/reschedule`, {
+    send<unknown>(`${basePath}/appointments/${uuid}/reschedule`, {
       method: "PATCH",
-      headers,
       body: JSON.stringify({ startsAt }),
     }),
 });
@@ -105,7 +107,12 @@ export type AppointmentsApi = ReturnType<typeof createAppointmentsApi>;
 
 export const manageLinkApi = {
   forToken: (token: string) =>
-    createAppointmentsApi("/booking/manage", { "X-Booking-Token": token }),
+    createAppointmentsApi("/booking/manage", (path, init) =>
+      request(path, {
+        ...init,
+        headers: { ...init?.headers, "X-Booking-Token": token },
+      }),
+    ),
 
   sendLink: (email: string) =>
     request<unknown>("/booking/manage/link", {

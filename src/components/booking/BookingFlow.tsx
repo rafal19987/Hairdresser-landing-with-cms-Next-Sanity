@@ -16,6 +16,8 @@ import type {
   SalonSettings,
 } from "@/lib/booking/types";
 import { SlotPicker } from "@/components/booking/SlotPicker";
+import { useSession } from "@/lib/account/session";
+import { accountApi, authorizedSend } from "@/lib/account/api";
 import {
   BookingForm,
   type BookingFormValues,
@@ -47,6 +49,7 @@ export const BookingFlow: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const session = useSession();
 
   const serviceId = searchParams.get("service");
   const employeeId = searchParams.get("employee");
@@ -140,15 +143,25 @@ export const BookingFlow: React.FC = () => {
     setSubmitError(null);
 
     try {
-      const booking = await bookingApi.createBooking({
-        userServiceId: slot.userServiceId,
-        startsAt: slot.startsAt,
-        firstName: values.firstName.trim(),
-        lastName: values.lastName.trim() || undefined,
-        email: values.email.trim(),
-        phone: values.phone.trim() || undefined,
-        note: values.note.trim() || undefined,
-      });
+      const note = values.note.trim() || undefined;
+      const booking = session
+        ? await bookingApi.createBooking(
+            {
+              userServiceId: slot.userServiceId,
+              startsAt: slot.startsAt,
+              note,
+            },
+            authorizedSend,
+          )
+        : await bookingApi.createBooking({
+            userServiceId: slot.userServiceId,
+            startsAt: slot.startsAt,
+            firstName: values.firstName.trim(),
+            lastName: values.lastName.trim() || undefined,
+            email: values.email.trim(),
+            phone: values.phone.trim() || undefined,
+            note,
+          });
 
       setResult({
         booking,
@@ -160,7 +173,7 @@ export const BookingFlow: React.FC = () => {
           price: slotEmployee
             ? `${slotEmployee.price} zł`
             : formatPrice(service.minPrice, service.maxPrice),
-          email: values.email.trim(),
+          email: session?.client.email ?? values.email.trim(),
         },
       });
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -351,7 +364,13 @@ export const BookingFlow: React.FC = () => {
           >
             <div className="flex flex-col gap-6">
               {submitError && <Notice tone="error">{submitError}</Notice>}
-              <BookingForm submitting={submitting} onSubmit={submit} />
+              <BookingForm
+                submitting={submitting}
+                client={session?.client}
+                loginHref={`/konto?next=${encodeURIComponent(`${pathname}?${searchParams}`)}`}
+                onLogout={() => void accountApi.logout()}
+                onSubmit={submit}
+              />
             </div>
           </StepSection>
         </div>
