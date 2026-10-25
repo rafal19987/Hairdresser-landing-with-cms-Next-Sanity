@@ -33,6 +33,14 @@ import {
   formatDuration,
   formatPrice,
 } from "@/components/booking/StepSection";
+import {
+  OptionCardSkeleton,
+  Shimmer,
+  SlotGridSkeleton,
+} from "@/components/booking/Skeleton";
+
+const SERVICE_CARD_HEIGHT = "min-h-[126px]";
+const EMPLOYEE_CARD_HEIGHT = "min-h-[94px]";
 
 interface SelectedSlot {
   time: string;
@@ -61,6 +69,7 @@ export const BookingFlow: React.FC = () => {
   const [slot, setSlot] = useState<SelectedSlot | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [slotsError, setSlotsError] = useState<string | null>(null);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [slotsVersion, setSlotsVersion] = useState(0);
@@ -117,17 +126,24 @@ export const BookingFlow: React.FC = () => {
     };
   }, [service]);
 
+  // Previous slots stay on screen while the next day loads, so the layout does not jump
   useEffect(() => {
     setSlot(null);
-    setSlots(null);
     setSlotsError(null);
-    if (!service || !date || !employees) return;
+    if (!service || !date) {
+      setSlots(null);
+      return;
+    }
+
+    setSlotsLoading(true);
+    if (!employees) return;
 
     let cancelled = false;
     bookingApi
       .getSlots(service.uuid, date, employee?.employeeId)
       .then((list) => !cancelled && setSlots(list))
-      .catch((error) => !cancelled && setSlotsError(errorMessage(error)));
+      .catch((error) => !cancelled && setSlotsError(errorMessage(error)))
+      .finally(() => !cancelled && setSlotsLoading(false));
 
     return () => {
       cancelled = true;
@@ -211,7 +227,19 @@ export const BookingFlow: React.FC = () => {
   if (loadError) return <Notice tone="error">{loadError}</Notice>;
 
   if (!salon || !services) {
-    return <Notice>Ładowanie dostępnych usług...</Notice>;
+    return (
+      <div aria-busy className="flex flex-col">
+        <StepSection number="01" title="Usługa">
+          <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }, (_, i) => (
+              <li key={i}>
+                <OptionCardSkeleton lines={3} className={SERVICE_CARD_HEIGHT} />
+              </li>
+            ))}
+          </ul>
+        </StepSection>
+      </div>
+    );
   }
 
   if (services.length === 0) {
@@ -240,6 +268,7 @@ export const BookingFlow: React.FC = () => {
             {services.map((item) => (
               <li key={item.uuid}>
                 <OptionCard
+                  className={SERVICE_CARD_HEIGHT}
                   onClick={() =>
                     updateQuery({ service: item.uuid, employee: null })
                   }
@@ -273,6 +302,7 @@ export const BookingFlow: React.FC = () => {
             <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <li>
                 <OptionCard
+                  className={EMPLOYEE_CARD_HEIGHT}
                   selected={!employee}
                   onClick={() => updateQuery({ employee: null })}
                 >
@@ -287,6 +317,7 @@ export const BookingFlow: React.FC = () => {
               {employees.map((item) => (
                 <li key={item.userServiceId}>
                   <OptionCard
+                    className={EMPLOYEE_CARD_HEIGHT}
                     selected={employee?.employeeId === item.employeeId}
                     onClick={() => updateQuery({ employee: item.employeeId })}
                   >
@@ -301,7 +332,16 @@ export const BookingFlow: React.FC = () => {
               ))}
             </ul>
           ) : (
-            <Notice>Ładowanie specjalistów...</Notice>
+            <ul
+              aria-busy
+              className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
+            >
+              {Array.from({ length: 4 }, (_, i) => (
+                <li key={i}>
+                  <OptionCardSkeleton className={EMPLOYEE_CARD_HEIGHT} />
+                </li>
+              ))}
+            </ul>
           )}
         </StepSection>
       )}
@@ -324,38 +364,47 @@ export const BookingFlow: React.FC = () => {
               onSelect={(day) => updateQuery({ date: day })}
             />
             {slotsError && <Notice tone="error">{slotsError}</Notice>}
-            {!slotsError && !slots && (
-              <Notice>Szukam wolnych terminów...</Notice>
-            )}
-            {slots?.length === 0 && (
-              <Notice>
-                Brak wolnych terminów w tym dniu. Wybierz inny dzień
-                {employee ? " lub dowolną osobę" : ""}.
-              </Notice>
-            )}
-            {slots && slots.length > 0 && (
-              <ul className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
-                {slots.map((available) => {
-                  const selected = slot?.startsAt === available.startsAt;
-                  return (
-                    <li key={available.startsAt}>
-                      <button
-                        type="button"
-                        aria-pressed={selected}
-                        onClick={() => selectSlot(available)}
-                        className={cn(
-                          "w-full border py-2 font-robotoCondensed text-lg transition-all duration-300",
-                          selected
-                            ? "border-[#C59D5F] bg-[#C59D5F] text-black"
-                            : "border-[#C59D5F]/40 text-white hover:border-[#C59D5F] hover:bg-[#C59D5F] hover:text-black",
-                        )}
-                      >
-                        {available.time}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+            {!slotsError && !slots && <SlotGridSkeleton />}
+            {!slotsError && slots && (
+              <div
+                aria-busy={slotsLoading}
+                className={cn(
+                  "relative overflow-hidden transition-opacity duration-300",
+                  slotsLoading && "pointer-events-none opacity-40",
+                )}
+              >
+                {slotsLoading && <Shimmer />}
+                {slots.length === 0 && (
+                  <Notice>
+                    Brak wolnych terminów w tym dniu. Wybierz inny dzień
+                    {employee ? " lub dowolną osobę" : ""}.
+                  </Notice>
+                )}
+                {slots.length > 0 && (
+                  <ul className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
+                    {slots.map((available) => {
+                      const selected = slot?.startsAt === available.startsAt;
+                      return (
+                        <li key={available.startsAt}>
+                          <button
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() => selectSlot(available)}
+                            className={cn(
+                              "w-full border py-2 font-robotoCondensed text-lg transition-all duration-300",
+                              selected
+                                ? "border-[#C59D5F] bg-[#C59D5F] text-black"
+                                : "border-[#C59D5F]/40 text-white hover:border-[#C59D5F] hover:bg-[#C59D5F] hover:text-black",
+                            )}
+                          >
+                            {available.time}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
             )}
           </div>
         </StepSection>

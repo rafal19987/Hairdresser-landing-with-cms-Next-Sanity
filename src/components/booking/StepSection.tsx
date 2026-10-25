@@ -39,9 +39,10 @@ export const StepSection: React.FC<{
 export const OptionCard: React.FC<{
   selected?: boolean;
   disabled?: boolean;
+  className?: string;
   onClick: () => void;
   children: React.ReactNode;
-}> = ({ selected, disabled, onClick, children }) => (
+}> = ({ selected, disabled, className, onClick, children }) => (
   <button
     type="button"
     onClick={onClick}
@@ -53,6 +54,7 @@ export const OptionCard: React.FC<{
         ? "border-[#C59D5F]"
         : "border-transparent hover:border-[#C59D5F]/60",
       disabled && "cursor-not-allowed opacity-40 hover:border-transparent",
+      className,
     )}
   >
     {children}
