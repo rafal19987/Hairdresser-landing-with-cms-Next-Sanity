@@ -96,6 +96,12 @@ export const createAppointmentsApi = (basePath: string, send: ApiSender) => ({
       body: JSON.stringify({ reason: reason || undefined }),
     }),
 
+  // Unlike the public slots, these do not count the appointment itself as busy
+  rescheduleSlots: (uuid: string, date: string) =>
+    send<{ slots: AvailableSlot[] }>(
+      `${basePath}/appointments/${uuid}/slots?date=${date}`,
+    ).then((data) => data.slots),
+
   reschedule: (uuid: string, startsAt: string) =>
     send<unknown>(`${basePath}/appointments/${uuid}/reschedule`, {
       method: "PATCH",

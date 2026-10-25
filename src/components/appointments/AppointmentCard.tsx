@@ -80,7 +80,8 @@ export const AppointmentCard: React.FC<{
   salon: SalonSettings;
   onCancel: (reason: string) => Promise<void>;
   onReschedule: (startsAt: string) => Promise<void>;
-}> = ({ appointment, salon, onCancel, onReschedule }) => {
+  loadRescheduleSlots: (date: string) => Promise<AvailableSlot[]>;
+}> = ({ appointment, salon, onCancel, onReschedule, loadRescheduleSlots }) => {
   const [panel, setPanel] = useState<Panel>("none");
   const [reason, setReason] = useState("");
   const [date, setDate] = useState<string | null>(null);
@@ -252,6 +253,7 @@ export const AppointmentCard: React.FC<{
                   selected={slot?.startsAt ?? null}
                   onSelect={setSlot}
                   refreshKey={refreshKey}
+                  loadSlots={loadRescheduleSlots}
                 />
                 <div className="flex flex-wrap items-center gap-4">
                   <button

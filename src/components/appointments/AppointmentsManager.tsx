@@ -116,6 +116,9 @@ export const AppointmentsManager: React.FC<{
                       `Wizyta ${appointment.serviceName} została anulowana. Potwierdzenie wysłaliśmy mailem.`,
                     );
                   }}
+                  loadRescheduleSlots={(date) =>
+                    api.rescheduleSlots(appointment.uuid, date)
+                  }
                   onReschedule={async (startsAt) => {
                     await api.reschedule(appointment.uuid, startsAt);
                     afterChange(
