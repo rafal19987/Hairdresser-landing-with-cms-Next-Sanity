@@ -14,7 +14,7 @@ export default async function RootLayout({
       <body
         className={`${robotoCondensed.variable} ${exo.variable} antialiased`}
       >
-        <Header>
+        <Header mobileNavigation={<Navigation variant="mobile" />}>
           <Navigation />
         </Header>
         <main className="mx-auto max-w-7xl">{children}</main>
