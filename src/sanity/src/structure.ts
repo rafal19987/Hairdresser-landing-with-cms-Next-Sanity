@@ -1,10 +1,10 @@
-import { group, singleton } from "@sanity/src/utils";
+import { singleton } from "@/sanity/src/utils";
 import type { StructureResolver } from "sanity/structure";
-import { CogIcon } from "@sanity/icons";
-import { DocumentsIcon } from "@sanity/icons";
-import { EqualIcon } from "@sanity/icons";
+import { CogIcon } from "@sanity/icons/Cog";
+import { DocumentsIcon } from "@sanity/icons/Documents";
+import { EqualIcon } from "@sanity/icons/Equal";
 // https://www.sanity.io/docs/structure-builder-cheat-sheet
-export const structure: StructureResolver = (S, context) =>
+export const structure: StructureResolver = (S) =>
   S.list()
     .title("Content")
     .items([

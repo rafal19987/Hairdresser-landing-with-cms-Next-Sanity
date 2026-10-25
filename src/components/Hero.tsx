@@ -1,23 +1,8 @@
-"use client";
-
 import Image from "next/image";
 import { buttonVariants } from "./ui/button";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { useEffect } from "react";
+import { cn, toHref } from "@/lib/utils";
 import { urlFor } from "@/sanity/lib/image";
-import { groq } from "next-sanity";
-
-export const heroQuery = groq`
-  *[_type == "hero"] {
-    "image": image.asset->url,
-    "alt": image.asset->alt,
-    "headline": headline,
-    "smallHeadline": smallHeadline,
-    "description": description,
-    "cta": cta
-  }[0]
-`;
 
 export interface SanityComponent {
   _id: string;
@@ -51,10 +36,6 @@ export interface HeroProps extends SanityComponent {
 export const Hero: React.FC<{
   data: HeroProps;
 }> = ({ data }) => {
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
-
   return (
     <section className="relative grid h-screen grid-cols-1 lg:grid-cols-2">
       <div className="absolute -z-10 h-full w-full lg:relative lg:h-auto lg:w-auto">
@@ -79,7 +60,7 @@ export const Hero: React.FC<{
           </p>
         </div>
         <Link
-          href={data.cta.url}
+          href={toHref(data.cta.url)}
           className={cn(
             buttonVariants({ variant: data.cta.variant, size: "lg" }),
             "font-robotoCondensed text-lg",

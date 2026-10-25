@@ -3,6 +3,7 @@ import type { PortableTextBlock } from "sanity";
 import { PortableText } from "next-sanity";
 import Image from "next/image";
 import { urlFor } from "@/sanity/lib/image";
+import { SectionWrapper } from "@components/SectionWrapper";
 
 export interface IllustrationWithContentProps extends SanityComponent {
   desktopImageDisplayOrder: "right" | "left";
@@ -15,8 +16,8 @@ export const IllustrationWithContent: React.FC<{
   data: IllustrationWithContentProps;
 }> = ({ data }) => {
   return (
-    <section className="">
-      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+    <SectionWrapper>
+      <div className="container grid min-h-screen grid-cols-1 gap-12 lg:grid-cols-2">
         <div
           className={`flex flex-col items-center justify-center ${data.desktopImageDisplayOrder === "right" ? "order-2" : "order-1"}`}
         >
@@ -25,7 +26,7 @@ export const IllustrationWithContent: React.FC<{
           </div>
         </div>
         <div
-          className={`relative flex h-full w-full items-center justify-center ${
+          className={`relative flex h-96 w-full items-center justify-center lg:h-full ${
             data.desktopImageDisplayOrder === "right" ? "order-1" : "order-2"
           }`}
         >
@@ -37,6 +38,6 @@ export const IllustrationWithContent: React.FC<{
           />
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 };

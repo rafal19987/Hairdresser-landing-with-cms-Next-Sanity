@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { DocumentsIcon } from "@sanity/icons";
+import { DocumentsIcon } from "@sanity/icons/Documents";
 
 export default defineType({
   name: "featuresNumbers",
@@ -35,10 +35,9 @@ export default defineType({
   ],
   preview: {
     select: {
-      title: "Features Numbers",
       media: "image",
     },
-    prepare({ title, media }) {
+    prepare({ media }) {
       return {
         title: "Features Numbers Section",
         media: media || DocumentsIcon,

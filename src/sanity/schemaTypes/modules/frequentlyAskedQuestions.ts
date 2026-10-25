@@ -1,5 +1,5 @@
 import { defineType, defineField } from "sanity";
-import { HelpCircleIcon } from "@sanity/icons";
+import { HelpCircleIcon } from "@sanity/icons/HelpCircle";
 
 export default defineType({
   name: "frequentlyAskedQuestions",

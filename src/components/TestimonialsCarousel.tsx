@@ -1,9 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import { PortableText } from "next-sanity";
-import { Star } from "lucide-react";
 import { urlFor } from "@/sanity/lib/image";
 import Autoplay from "embla-carousel-autoplay";
 import {
@@ -12,33 +10,15 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-  type CarouselApi,
 } from "@ui/carousel";
-import { buttonVariants } from "@ui/button";
 import { TestimonialsProps } from "./Testimonials";
 
 export const TestimonialsCarousel: React.FC<{
   testimonials: TestimonialsProps["testimonials"];
 }> = ({ testimonials }) => {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!api) return;
-
-    setCount(api.scrollSnapList().length);
-    setCurrent(api.selectedScrollSnap() + 1);
-
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap() + 1);
-    });
-  }, [api]);
-
   return (
     <Carousel
       className="w-full"
-      setApi={setApi}
       opts={{ align: "start", loop: true }}
       orientation="horizontal"
       plugins={[

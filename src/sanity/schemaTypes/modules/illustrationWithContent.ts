@@ -1,5 +1,5 @@
-import { defineArrayMember, defineField, defineType } from "sanity";
-import { ImagesIcon } from "@sanity/icons";
+import { defineField, defineType } from "sanity";
+import { ImagesIcon } from "@sanity/icons/Images";
 
 export default defineType({
   name: "illustrationWithContent",

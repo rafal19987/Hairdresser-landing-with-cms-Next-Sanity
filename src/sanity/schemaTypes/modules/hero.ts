@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { DocumentTextIcon } from "@sanity/icons";
+import { DocumentTextIcon } from "@sanity/icons/DocumentText";
 
 export default defineType({
   name: "hero",
@@ -62,10 +62,9 @@ export default defineType({
   ],
   preview: {
     select: {
-      title: "Hero",
       media: "image",
     },
-    prepare({ title, media }) {
+    prepare({ media }) {
       return {
         title: "Hero Section",
         media: media || DocumentTextIcon,
