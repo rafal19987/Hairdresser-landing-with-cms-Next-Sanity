@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import { BookingServiceInput } from "@/sanity/components/BookingServiceInput";
 
 export default defineType({
   name: "service",
@@ -24,6 +25,14 @@ export default defineType({
       name: "button",
       title: "Button",
       type: "button",
+    }),
+    defineField({
+      name: "bookingServiceId",
+      title: "Usługa w systemie rezerwacji",
+      description:
+        "Przycisk otworzy rezerwację z wybraną usługą. Bez powiązania używa adresu URL przycisku.",
+      type: "string",
+      components: { input: BookingServiceInput },
     }),
     defineField({
       name: "image",

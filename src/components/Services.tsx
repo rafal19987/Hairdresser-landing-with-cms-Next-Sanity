@@ -6,6 +6,7 @@ import { urlFor } from "@/sanity/lib/image";
 
 export interface ServicesProps extends SanityComponent {
   services: {
+    bookingServiceId?: string;
     letter: string;
     heading: string;
     description: string;
@@ -50,7 +51,11 @@ export const Services: React.FC<{ data: ServicesProps }> = ({ data }) => {
                 {service.description}
               </p>
               <Link
-                href={toHref(service.button?.url)}
+                href={
+                  service.bookingServiceId
+                    ? `/book?service=${service.bookingServiceId}`
+                    : toHref(service.button?.url)
+                }
                 className={cn(
                   buttonVariants({
                     variant: service.button?.variant,
