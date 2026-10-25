@@ -6,24 +6,20 @@ import featuresNumbers from "./featuresNumbers";
 import hero from "./hero";
 import testimonials from "./testimonials";
 
+export const sectionTypes = [
+  hero,
+  featuresNumbers,
+  illustrationWithContent,
+  services,
+  frequentlyAskedQuestions,
+  testimonials,
+];
+
 export default defineType({
   name: "components",
   title: "Components",
   type: "array",
-  of: [
-    // @ts-ignore
-    hero,
-    // @ts-ignore
-    featuresNumbers,
-    // @ts-ignore
-    illustrationWithContent,
-    // @ts-ignore
-    services,
-    // @ts-ignore
-    frequentlyAskedQuestions,
-    // @ts-ignore
-    testimonials,
-  ],
+  of: sectionTypes.map((section) => defineArrayMember({ type: section.name })),
   options: {
     layout: "list",
     insertMenu: {
@@ -37,7 +33,7 @@ export default defineType({
             "hero",
             "featuresNumbers",
             "illustrationWithContent",
-            "services",
+            "servicesSection",
             "frequentlyAskedQuestions",
             "testimonials",
           ],

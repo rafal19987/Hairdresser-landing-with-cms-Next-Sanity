@@ -9,9 +9,9 @@ import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
-import { apiVersion, dataset, projectId } from "@sanity/src/env";
-import { structure } from "@sanity/src/structure";
-import { schema } from "@sanity/schemaTypes";
+import { apiVersion, dataset, projectId } from "@/sanity/src/env";
+import { structure } from "@/sanity/src/structure";
+import { schema } from "@/sanity/schemaTypes";
 
 export default defineConfig({
   basePath: "/cms",

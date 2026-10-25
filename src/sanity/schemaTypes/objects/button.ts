@@ -22,6 +22,12 @@ export default defineType({
       name: "url",
       title: "Url",
       type: "url",
+      description: "Links within this site should be paths, e.g. /book",
+      validation: (Rule) =>
+        Rule.uri({
+          allowRelative: true,
+          scheme: ["http", "https", "mailto", "tel"],
+        }),
     }),
   ],
 });
