@@ -1,5 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { DocumentsIcon } from "@sanity/icons";
+import { DocumentsIcon } from "@sanity/icons/Documents";
 
 export default defineType({
   name: "featuresNumbers",

@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { DocumentVideoIcon } from "@sanity/icons";
+import { DocumentVideoIcon } from "@sanity/icons/DocumentVideo";
 
 export default defineType({
   name: "video",

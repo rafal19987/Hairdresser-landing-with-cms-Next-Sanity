@@ -9,14 +9,20 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-export default function Page({ params }: { params: { token: string } }) {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = await params;
+
   return (
     <div className="container max-w-7xl pb-24 pt-32">
       <PageHeading
         title="Twoje wizyty"
         description="Sprawdź zaplanowane wizyty, przełóż je lub anuluj."
       />
-      <ManageByLink token={params.token} />
+      <ManageByLink token={token} />
     </div>
   );
 }

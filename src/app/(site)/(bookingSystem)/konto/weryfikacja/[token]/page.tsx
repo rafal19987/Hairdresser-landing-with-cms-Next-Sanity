@@ -8,14 +8,20 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-export default function Page({ params }: { params: { token: string } }) {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = await params;
+
   return (
     <div className="container max-w-7xl pb-24 pt-32">
       <PageHeading
         title="Aktywacja konta"
         description="Potwierdzamy Twój adres email."
       />
-      <VerifyEmail token={params.token} />
+      <VerifyEmail token={token} />
     </div>
   );
 }
