@@ -62,10 +62,9 @@ export default defineType({
   ],
   preview: {
     select: {
-      title: "Hero",
       media: "image",
     },
-    prepare({ title, media }) {
+    prepare({ media }) {
       return {
         title: "Hero Section",
         media: media || DocumentTextIcon,

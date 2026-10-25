@@ -1,4 +1,4 @@
-import { client } from "@sanity/lib/client";
+import { client } from "@/sanity/lib/client";
 import { groq } from "next-sanity";
 import { NavigationItem } from "./NavigationItem";
 
@@ -12,9 +12,7 @@ const getNavigation = async () => {
   );
 };
 
-export const Navigation: React.FC<{ children?: React.ReactNode }> = async ({
-  children,
-}) => {
+export const Navigation: React.FC = async () => {
   const navigation = await getNavigation();
   return (
     <nav className="hidden items-center justify-center gap-8 md:flex">

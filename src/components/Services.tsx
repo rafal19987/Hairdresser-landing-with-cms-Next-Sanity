@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { SanityComponent } from "./Hero";
 import { buttonVariants } from "./ui/button";
-import { cn } from "@/lib/utils";
+import { cn, toHref } from "@/lib/utils";
 import { urlFor } from "@/sanity/lib/image";
 
 export interface ServicesProps extends SanityComponent {
@@ -50,16 +50,16 @@ export const Services: React.FC<{ data: ServicesProps }> = ({ data }) => {
                 {service.description}
               </p>
               <Link
-                href={`/${data.services[0].button.url.split("/")[3]}`}
+                href={toHref(service.button?.url)}
                 className={cn(
                   buttonVariants({
-                    variant: service.button.variant,
+                    variant: service.button?.variant,
                     size: "lg",
                   }),
                   "rounded-0 font-robotoCondensed text-lg",
                 )}
               >
-                {service.button.label}
+                {service.button?.label}
               </Link>
             </div>
           </li>

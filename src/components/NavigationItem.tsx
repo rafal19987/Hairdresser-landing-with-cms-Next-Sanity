@@ -3,10 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export const NavigationItem: React.FC<{
-  children?: React.ReactNode;
-  slug: string;
-}> = ({ children, slug }) => {
+export const NavigationItem: React.FC<{ slug: string }> = ({ slug }) => {
   const pathname = usePathname();
   const isActive = pathname === `${slug === "/" ? "/" : `/${slug}`}`;
 

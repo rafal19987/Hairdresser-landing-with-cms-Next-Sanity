@@ -22,8 +22,7 @@
       "@components/*": ["./src/components/*"],
       "@ui/*": ["./src/components/ui/*"],
       "@lib/*": ["./src/lib/*"],
-      "@assets/*": ["./src/assets/*"],
-      "@sanity/*": ["./src/sanity/*"]
+      "@assets/*": ["./src/assets/*"]
     },
     "target": "ES2017"
   },
