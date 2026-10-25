@@ -2,12 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { BookingApiError, bookingApi } from "@/lib/booking/api";
+import { BookingApiError, bookingApi, toErrorMessage } from "@/lib/booking/api";
 import {
   bookableDays,
+  firstOpenDay,
   formatLongDate,
-  isSalonClosed,
 } from "@/lib/booking/dates";
 import type {
   AvailableSlot,
@@ -16,7 +15,7 @@ import type {
   BookingResult,
   SalonSettings,
 } from "@/lib/booking/types";
-import { DayPicker } from "@/components/booking/DayPicker";
+import { SlotPicker } from "@/components/booking/SlotPicker";
 import {
   BookingForm,
   type BookingFormValues,
@@ -33,11 +32,7 @@ import {
   formatDuration,
   formatPrice,
 } from "@/components/booking/StepSection";
-import {
-  OptionCardSkeleton,
-  Shimmer,
-  SlotGridSkeleton,
-} from "@/components/booking/Skeleton";
+import { OptionCardSkeleton } from "@/components/booking/Skeleton";
 
 const SERVICE_CARD_HEIGHT = "min-h-[126px]";
 const EMPLOYEE_CARD_HEIGHT = "min-h-[94px]";
@@ -47,11 +42,6 @@ interface SelectedSlot {
   startsAt: string;
   userServiceId: string;
 }
-
-const errorMessage = (error: unknown) =>
-  error instanceof BookingApiError
-    ? error.message
-    : "Coś poszło nie tak. Spróbuj ponownie.";
 
 export const BookingFlow: React.FC = () => {
   const router = useRouter();
@@ -65,11 +55,8 @@ export const BookingFlow: React.FC = () => {
   const [salon, setSalon] = useState<SalonSettings | null>(null);
   const [services, setServices] = useState<BookableService[] | null>(null);
   const [employees, setEmployees] = useState<BookableEmployee[] | null>(null);
-  const [slots, setSlots] = useState<AvailableSlot[] | null>(null);
   const [slot, setSlot] = useState<SelectedSlot | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [slotsError, setSlotsError] = useState<string | null>(null);
-  const [slotsLoading, setSlotsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [slotsVersion, setSlotsVersion] = useState(0);
@@ -97,7 +84,7 @@ export const BookingFlow: React.FC = () => {
         setSalon(salonSettings);
         setServices(bookableServices);
       })
-      .catch((error) => setLoadError(errorMessage(error)));
+      .catch((error) => setLoadError(toErrorMessage(error)));
   }, []);
 
   const service = services?.find((item) => item.uuid === serviceId) ?? null;
@@ -108,7 +95,7 @@ export const BookingFlow: React.FC = () => {
   const date = useMemo(() => {
     if (!salon) return null;
     if (requestedDate && days.includes(requestedDate)) return requestedDate;
-    return days.find((day) => !isSalonClosed(salon, day)) ?? null;
+    return firstOpenDay(salon, days);
   }, [days, requestedDate, salon]);
 
   useEffect(() => {
@@ -119,36 +106,16 @@ export const BookingFlow: React.FC = () => {
     bookingApi
       .getEmployees(service.uuid)
       .then((list) => !cancelled && setEmployees(list))
-      .catch((error) => !cancelled && setSlotsError(errorMessage(error)));
+      .catch((error) => !cancelled && setLoadError(toErrorMessage(error)));
 
     return () => {
       cancelled = true;
     };
   }, [service]);
 
-  // Previous slots stay on screen while the next day loads, so the layout does not jump
   useEffect(() => {
     setSlot(null);
-    setSlotsError(null);
-    if (!service || !date) {
-      setSlots(null);
-      return;
-    }
-
-    setSlotsLoading(true);
-    if (!employees) return;
-
-    let cancelled = false;
-    bookingApi
-      .getSlots(service.uuid, date, employee?.employeeId)
-      .then((list) => !cancelled && setSlots(list))
-      .catch((error) => !cancelled && setSlotsError(errorMessage(error)))
-      .finally(() => !cancelled && setSlotsLoading(false));
-
-    return () => {
-      cancelled = true;
-    };
-  }, [service, date, employee, employees, slotsVersion]);
+  }, [service, date, employee, slotsVersion]);
 
   const selectSlot = (available: AvailableSlot) => {
     setSubmitError(null);
@@ -201,7 +168,7 @@ export const BookingFlow: React.FC = () => {
       setSubmitError(
         error instanceof BookingApiError && error.status === 409
           ? "Ten termin został właśnie zajęty. Wybierz inny."
-          : errorMessage(error),
+          : toErrorMessage(error),
       );
       if (error instanceof BookingApiError && error.status === 409) {
         setSlotsVersion((version) => version + 1);
@@ -356,57 +323,18 @@ export const BookingFlow: React.FC = () => {
               : null
           }
         >
-          <div className="flex flex-col gap-6">
-            <DayPicker
-              salon={salon}
-              days={days}
-              selected={date}
-              onSelect={(day) => updateQuery({ date: day })}
-            />
-            {slotsError && <Notice tone="error">{slotsError}</Notice>}
-            {!slotsError && !slots && <SlotGridSkeleton />}
-            {!slotsError && slots && (
-              <div
-                aria-busy={slotsLoading}
-                className={cn(
-                  "relative overflow-hidden transition-opacity duration-300",
-                  slotsLoading && "pointer-events-none opacity-40",
-                )}
-              >
-                {slotsLoading && <Shimmer />}
-                {slots.length === 0 && (
-                  <Notice>
-                    Brak wolnych terminów w tym dniu. Wybierz inny dzień
-                    {employee ? " lub dowolną osobę" : ""}.
-                  </Notice>
-                )}
-                {slots.length > 0 && (
-                  <ul className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
-                    {slots.map((available) => {
-                      const selected = slot?.startsAt === available.startsAt;
-                      return (
-                        <li key={available.startsAt}>
-                          <button
-                            type="button"
-                            aria-pressed={selected}
-                            onClick={() => selectSlot(available)}
-                            className={cn(
-                              "w-full border py-2 font-robotoCondensed text-lg transition-all duration-300",
-                              selected
-                                ? "border-[#C59D5F] bg-[#C59D5F] text-black"
-                                : "border-[#C59D5F]/40 text-white hover:border-[#C59D5F] hover:bg-[#C59D5F] hover:text-black",
-                            )}
-                          >
-                            {available.time}
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            )}
-          </div>
+          <SlotPicker
+            salon={salon}
+            serviceId={service.uuid}
+            employeeId={employee?.employeeId}
+            date={date}
+            onDateChange={(day) => updateQuery({ date: day })}
+            selected={slot?.startsAt ?? null}
+            onSelect={selectSlot}
+            ready={Boolean(employees)}
+            refreshKey={slotsVersion}
+            emptyHint={employee ? "lub dowolną osobę" : undefined}
+          />
         </StepSection>
       )}
 
