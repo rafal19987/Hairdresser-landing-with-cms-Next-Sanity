@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { toErrorMessage } from "@/lib/booking/api";
 import { accountApi, isUnverifiedEmailError } from "@/lib/account/api";
@@ -96,13 +97,21 @@ export const LoginForm: React.FC<{ onLoggedIn: () => void }> = ({
           className={inputClass()}
         />
       </Field>
-      <button
-        type="submit"
-        disabled={submitting}
-        className={primaryButtonClass}
-      >
-        {submitting ? "Logowanie..." : "Zaloguj się"}
-      </button>
+      <div className="flex flex-wrap items-center gap-6">
+        <button
+          type="submit"
+          disabled={submitting}
+          className={primaryButtonClass}
+        >
+          {submitting ? "Logowanie..." : "Zaloguj się"}
+        </button>
+        <Link
+          href="/konto/reset-hasla"
+          className="font-robotoCondensed text-base text-[#BEBEBE] underline-offset-4 transition-colors hover:text-white hover:underline"
+        >
+          Nie pamiętasz hasła?
+        </Link>
+      </div>
     </form>
   );
 };
