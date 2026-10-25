@@ -43,7 +43,11 @@ export const SlotPicker: React.FC<{
   const [error, setError] = useState<string | null>(null);
   // Kept in a ref, so a new function identity on re-render does not refetch
   const loadSlotsRef = useRef(loadSlots);
-  loadSlotsRef.current = loadSlots;
+
+  // Declared before the fetching effect, so it runs first after each render
+  useEffect(() => {
+    loadSlotsRef.current = loadSlots;
+  });
 
   // Previous slots stay on screen while the next day loads, so the layout does not jump
   useEffect(() => {
