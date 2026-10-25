@@ -128,6 +128,18 @@ export const accountApi = {
   resendVerification: (email: string) =>
     request<unknown>("/clients/resend-verification", post({ email })),
 
+  forgotPassword: (email: string) =>
+    request<unknown>("/clients/forgot-password", post({ email })),
+
+  // The backend signs the client out everywhere, so the local session is dropped too
+  resetPassword: async (token: string, password: string) => {
+    await request<unknown>(
+      "/clients/reset-password",
+      post({ token, password }),
+    );
+    clearSession();
+  },
+
   getProfile: () => authorizedSend<ClientProfile>("/booking/me"),
 
   updateProfile: async (
