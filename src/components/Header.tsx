@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { buttonVariants } from "./ui/button";
 import { Menu } from "lucide-react";
+import { useSession } from "@/lib/account/session";
 
 export const Header: React.FC<{ children?: React.ReactNode }> = ({
   children,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const session = useSession();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,18 +41,26 @@ export const Header: React.FC<{ children?: React.ReactNode }> = ({
           Rêve
         </Link>
         {children}
-        <Link
-          href={`/book`}
-          className={cn(
-            buttonVariants({
-              variant: "outline",
-              size: "sm",
-            }),
-            "rounded-0 hidden items-center justify-center px-6 font-robotoCondensed text-lg md:flex",
-          )}
-        >
-          Zarezerwuj wizytę
-        </Link>
+        <div className="hidden items-center gap-8 md:flex">
+          <Link
+            href="/konto"
+            className="relative py-1 font-robotoCondensed text-lg text-[#BEBEBE] transition-colors after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-[#C59D5F] after:transition-all after:duration-300 after:content-[''] hover:text-white hover:after:w-full"
+          >
+            {session ? "Moje konto" : "Zaloguj się"}
+          </Link>
+          <Link
+            href={`/book`}
+            className={cn(
+              buttonVariants({
+                variant: "outline",
+                size: "sm",
+              }),
+              "rounded-0 hidden items-center justify-center px-6 font-robotoCondensed text-lg md:flex",
+            )}
+          >
+            Zarezerwuj wizytę
+          </Link>
+        </div>
         <div className="flex md:hidden">
           <Menu className="text-[#C59D5F]" />
         </div>

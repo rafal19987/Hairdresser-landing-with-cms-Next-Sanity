@@ -36,12 +36,13 @@ export interface AvailableSlot {
   userServiceIds: string[];
 }
 
+// Guest details are required only when booking without a client account
 export interface BookingPayload {
   userServiceId: string;
   startsAt: string;
-  firstName: string;
+  firstName?: string;
   lastName?: string;
-  email: string;
+  email?: string;
   phone?: string;
   note?: string;
 }

@@ -1,8 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import {
+  EMAIL_PATTERN,
+  Field,
+  PHONE_PATTERN,
+  inputClass,
+  primaryButtonClass,
+} from "@/components/forms/FormField";
+import { displayName, type SessionClient } from "@/lib/account/session";
 
 export interface BookingFormValues {
   firstName: string;
@@ -20,51 +28,31 @@ const EMPTY_VALUES: BookingFormValues = {
   note: "",
 };
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const validate = (values: BookingFormValues) => {
+const validate = (values: BookingFormValues, asClient: boolean) => {
   const errors: Partial<Record<keyof BookingFormValues, string>> = {};
+  if (asClient) return errors;
 
   if (!values.firstName.trim()) errors.firstName = "Podaj imię";
   if (!EMAIL_PATTERN.test(values.email.trim())) {
     errors.email = "Podaj poprawny adres email";
   }
-  if (values.phone && !/^[+\d\s()-]{6,30}$/.test(values.phone.trim())) {
+  if (values.phone && !PHONE_PATTERN.test(values.phone.trim())) {
     errors.phone = "Podaj poprawny numer telefonu";
   }
 
   return errors;
 };
 
-const Field: React.FC<{
-  label: string;
-  error?: string;
-  optional?: boolean;
-  children: React.ReactNode;
-}> = ({ label, error, optional, children }) => (
-  <label className="flex flex-col gap-2 font-robotoCondensed">
-    <span className="text-base text-[#ADADAD]">
-      {label}
-      {optional && <span className="text-[#ADADAD]/60"> (opcjonalnie)</span>}
-    </span>
-    {children}
-    {error && <span className="text-sm text-red-300">{error}</span>}
-  </label>
-);
-
-const inputClass = (error?: string) =>
-  cn(
-    "w-full border-b-2 bg-transparent py-2 font-robotoCondensed text-lg text-white outline-none transition-colors duration-300 placeholder:text-[#ADADAD]/50",
-    error ? "border-red-400" : "border-[#C59D5F]/30 focus:border-[#C59D5F]",
-  );
-
 export const BookingForm: React.FC<{
   submitting: boolean;
+  client?: SessionClient | null;
+  loginHref: string;
+  onLogout?: () => void;
   onSubmit: (values: BookingFormValues) => void;
-}> = ({ submitting, onSubmit }) => {
+}> = ({ submitting, client, loginHref, onLogout, onSubmit }) => {
   const [values, setValues] = useState(EMPTY_VALUES);
   const [touched, setTouched] = useState(false);
-  const errors = touched ? validate(values) : {};
+  const errors = touched ? validate(values, Boolean(client)) : {};
 
   const update =
     (field: keyof BookingFormValues) =>
@@ -75,7 +63,9 @@ export const BookingForm: React.FC<{
     event.preventDefault();
     setTouched(true);
 
-    if (Object.keys(validate(values)).length === 0) onSubmit(values);
+    if (Object.keys(validate(values, Boolean(client))).length === 0) {
+      onSubmit(values);
+    }
   };
 
   return (
@@ -84,43 +74,60 @@ export const BookingForm: React.FC<{
       onSubmit={handleSubmit}
       className="grid grid-cols-1 gap-6 md:grid-cols-2"
     >
-      <Field label="Imię" error={errors.firstName}>
-        <input
-          className={inputClass(errors.firstName)}
-          value={values.firstName}
-          onChange={update("firstName")}
-          autoComplete="given-name"
-          maxLength={100}
-        />
-      </Field>
-      <Field label="Nazwisko" optional>
-        <input
-          className={inputClass()}
-          value={values.lastName}
-          onChange={update("lastName")}
-          autoComplete="family-name"
-          maxLength={100}
-        />
-      </Field>
-      <Field label="Email" error={errors.email}>
-        <input
-          type="email"
-          className={inputClass(errors.email)}
-          value={values.email}
-          onChange={update("email")}
-          autoComplete="email"
-        />
-      </Field>
-      <Field label="Telefon" optional error={errors.phone}>
-        <input
-          type="tel"
-          className={inputClass(errors.phone)}
-          value={values.phone}
-          onChange={update("phone")}
-          autoComplete="tel"
-          maxLength={30}
-        />
-      </Field>
+      {client ? (
+        <p className="font-robotoCondensed text-lg text-[#BEBEBE] md:col-span-2">
+          Rezerwujesz jako{" "}
+          <span className="text-white">{displayName(client)}</span> (
+          {client.email}).{" "}
+          <button
+            type="button"
+            onClick={onLogout}
+            className="text-[#C59D5F] underline-offset-4 hover:underline"
+          >
+            To nie Ty? Wyloguj się
+          </button>
+        </p>
+      ) : (
+        <>
+          <Field label="Imię" error={errors.firstName}>
+            <input
+              className={inputClass(errors.firstName)}
+              value={values.firstName}
+              onChange={update("firstName")}
+              autoComplete="given-name"
+              maxLength={100}
+            />
+          </Field>
+          <Field label="Nazwisko" optional>
+            <input
+              className={inputClass()}
+              value={values.lastName}
+              onChange={update("lastName")}
+              autoComplete="family-name"
+              maxLength={100}
+            />
+          </Field>
+          <Field label="Email" error={errors.email}>
+            <input
+              type="email"
+              className={inputClass(errors.email)}
+              value={values.email}
+              onChange={update("email")}
+              autoComplete="email"
+            />
+          </Field>
+          <Field label="Telefon" optional error={errors.phone}>
+            <input
+              type="tel"
+              className={inputClass(errors.phone)}
+              value={values.phone}
+              onChange={update("phone")}
+              autoComplete="tel"
+              maxLength={30}
+            />
+          </Field>
+        </>
+      )}
       <div className="md:col-span-2">
         <Field label="Uwagi do wizyty" optional>
           <textarea
@@ -134,16 +141,29 @@ export const BookingForm: React.FC<{
       </div>
       <div className="flex flex-col gap-4 md:col-span-2">
         <p className="font-robotoCondensed text-sm text-[#ADADAD]">
-          Na podany adres wyślemy potwierdzenie z linkiem, pod którym
-          sprawdzisz, przełożysz lub anulujesz wizytę.
+          {client ? (
+            <>
+              Wizyta pojawi się w Twoim{" "}
+              <Link href="/konto" className="text-[#C59D5F] hover:underline">
+                koncie
+              </Link>
+              , a potwierdzenie wyślemy na {client.email}.
+            </>
+          ) : (
+            <>
+              Na podany adres wyślemy potwierdzenie z linkiem, pod którym
+              sprawdzisz, przełożysz lub anulujesz wizytę. Masz konto?{" "}
+              <Link href={loginHref} className="text-[#C59D5F] hover:underline">
+                Zaloguj się
+              </Link>
+              .
+            </>
+          )}
         </p>
         <button
           type="submit"
           disabled={submitting}
-          className={cn(
-            buttonVariants({ variant: "primary", size: "lg" }),
-            "w-full rounded-none font-robotoCondensed text-lg md:w-fit",
-          )}
+          className={primaryButtonClass}
         >
           {submitting ? "Rezerwuję..." : "Zarezerwuj wizytę"}
         </button>
