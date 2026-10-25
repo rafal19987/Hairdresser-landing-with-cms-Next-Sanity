@@ -8,14 +8,21 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-export default function Page({ params }: { params: { token: string } }) {
+// Awaiting params works on Next 14 and is required from Next 15
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = await params;
+
   return (
     <div className="container max-w-7xl pb-24 pt-32">
       <PageHeading
         title="Nowe hasło"
         description="Ustaw nowe hasło do swojego konta."
       />
-      <ResetPasswordForm token={params.token} />
+      <ResetPasswordForm token={token} />
     </div>
   );
 }
