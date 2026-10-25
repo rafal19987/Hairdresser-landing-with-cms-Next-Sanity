@@ -2,51 +2,35 @@ import { client } from "@/sanity/lib/client";
 import { Metadata } from "next";
 import { groq } from "next-sanity";
 import { notFound } from "next/navigation";
-import { Hero, type HeroProps } from "@/components/Hero";
-import {
-  FeaturesNumbers,
-  type FeaturesNumbersProps,
-} from "@/components/FeaturesNumbers";
-import { FAQ, type FAQProps } from "@/components/FAQ";
-import {
-  IllustrationWithContent,
-  type IllustrationWithContentProps,
-} from "@/components/IllustrationWithContent";
-import { Services, type ServicesProps } from "@/components/Services";
-import {
-  Testimonials,
-  type TestimonialsProps,
-} from "@/components/Testimonials";
+import { Fragment } from "react";
+import { Hero } from "@/components/Hero";
+import { FeaturesNumbers } from "@/components/FeaturesNumbers";
+import { FAQ } from "@/components/FAQ";
+import { IllustrationWithContent } from "@/components/IllustrationWithContent";
+import { Services } from "@/components/Services";
+import { Testimonials } from "@/components/Testimonials";
 
 type Props = { params: { slug?: string[] } };
 
-type SanityComponentsName = [
-  (
-    | "hero"
-    | "featuresNumbers"
-    | "frequentlyAskedQuestions"
-    | "illustrationWithContent"
-    | "servicesSection"
-  ),
-  "testimonials",
-];
+type SanitySection = { _type: string; _key?: string };
 
-// Record need to be section type name from sanity and value need to be representive component
-// TODO: add type for all sanity section types name and make it more generic
+// CMS sections arrive untyped; each component declares the shape it expects
+const renderSection = <P,>(Component: React.FC<{ data: P }>) =>
+  function Section(section: SanitySection) {
+    return <Component data={section as unknown as P} />;
+  };
+
+// Keys are section type names from Sanity
 const SECTION_COMPONENTS: Record<
-  SanityComponentsName[number],
-  React.ComponentType<any>
+  string,
+  (section: SanitySection) => React.ReactNode
 > = {
-  hero: (props: HeroProps) => <Hero data={props} />,
-  featuresNumbers: (props: FeaturesNumbersProps) => (
-    <FeaturesNumbers data={props} />
-  ),
-  frequentlyAskedQuestions: (props: FAQProps) => <FAQ data={props} />,
-  illustrationWithContent: (props: IllustrationWithContentProps) => (
-    <IllustrationWithContent data={props} />
-  ),
-  servicesSection: (props: ServicesProps) => <Services data={props} />,
-  testimonials: (props: TestimonialsProps) => <Testimonials data={props} />,
+  hero: renderSection(Hero),
+  featuresNumbers: renderSection(FeaturesNumbers),
+  frequentlyAskedQuestions: renderSection(FAQ),
+  illustrationWithContent: renderSection(IllustrationWithContent),
+  servicesSection: renderSection(Services),
+  testimonials: renderSection(Testimonials),
 };
 
 const getAllPagesSlugs = groq`
@@ -70,18 +54,8 @@ const getPageMetadata = groq`
   }[0].seo
 `;
 
-const getPageBody = groq`
-  *[_type == "page" && slug.current == $slug]{
-    body
-  }[0].body
-`;
-
 const fetchAllPagesSlugs = async () => {
   return await client.fetch(getAllPagesSlugs, {}, { cache: "no-cache" });
-};
-
-const fetchPageBody = async (slug: string) => {
-  return await client.fetch(getPageBody, { slug }, { cache: "no-cache" });
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -110,21 +84,22 @@ export default async function Page({ params }: Props) {
   const { slug } = params;
 
   const pageSlug = slug ? slug.join("/") : "/";
-  const page = await client.fetch(getPageBySlug, { slug: pageSlug });
+  const page = await client.fetch(
+    getPageBySlug,
+    { slug: pageSlug },
+    { cache: "no-cache" },
+  );
 
   if (!page) return notFound();
 
-  const body = await fetchPageBody(pageSlug);
-
-  if (!body) return <div>{params.slug}</div>;
-
   return (
-    <div className="">
-      {body.map((item: any, index: number) => {
-        const SectionComponent =
-          SECTION_COMPONENTS[item._type as keyof typeof SECTION_COMPONENTS];
-        return SectionComponent ? (
-          <SectionComponent key={`${item._type}-${index}`} {...item} />
+    <div>
+      {(page.body ?? []).map((section: SanitySection, index: number) => {
+        const render = SECTION_COMPONENTS[section._type];
+        return render ? (
+          <Fragment key={section._key ?? `${section._type}-${index}`}>
+            {render(section)}
+          </Fragment>
         ) : null;
       })}
     </div>
