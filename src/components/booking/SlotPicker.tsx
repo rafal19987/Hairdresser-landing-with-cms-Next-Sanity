@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { bookingApi, toErrorMessage } from "@/lib/booking/api";
 import { bookableDays } from "@/lib/booking/dates";
@@ -22,6 +22,8 @@ export const SlotPicker: React.FC<{
   // Bump to reload slots, e.g. after a booking conflict
   refreshKey?: number;
   emptyHint?: string;
+  // Replaces the public slots endpoint, e.g. when rescheduling
+  loadSlots?: (date: string) => Promise<AvailableSlot[]>;
 }> = ({
   salon,
   serviceId,
@@ -33,11 +35,15 @@ export const SlotPicker: React.FC<{
   ready = true,
   refreshKey = 0,
   emptyHint,
+  loadSlots,
 }) => {
   const days = useMemo(() => bookableDays(salon), [salon]);
   const [slots, setSlots] = useState<AvailableSlot[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Kept in a ref, so a new function identity on re-render does not refetch
+  const loadSlotsRef = useRef(loadSlots);
+  loadSlotsRef.current = loadSlots;
 
   // Previous slots stay on screen while the next day loads, so the layout does not jump
   useEffect(() => {
@@ -51,8 +57,10 @@ export const SlotPicker: React.FC<{
     if (!ready) return;
 
     let cancelled = false;
-    bookingApi
-      .getSlots(serviceId, date, employeeId)
+    (loadSlotsRef.current
+      ? loadSlotsRef.current(date)
+      : bookingApi.getSlots(serviceId, date, employeeId)
+    )
       .then((list) => !cancelled && setSlots(list))
       .catch((reason) => !cancelled && setError(toErrorMessage(reason)))
       .finally(() => !cancelled && setLoading(false));
