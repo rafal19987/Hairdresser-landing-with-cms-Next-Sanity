@@ -53,11 +53,7 @@ export interface BookingResult {
 }
 
 export type AppointmentStatus =
-  | "pending"
-  | "confirmed"
-  | "rescheduled"
-  | "cancelled"
-  | "completed";
+  "pending" | "confirmed" | "rescheduled" | "cancelled" | "completed";
 
 export interface ManagedAppointment {
   uuid: string;

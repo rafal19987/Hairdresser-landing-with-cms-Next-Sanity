@@ -29,7 +29,7 @@ export const BookingServiceInput = ({
   );
 
   return (
-    <Stack space={2}>
+    <Stack gap={2}>
       <Select
         value={value ?? ""}
         disabled={readOnly || (!services && !error)}

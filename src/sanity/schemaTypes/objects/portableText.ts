@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { LinkIcon } from "@sanity/icons";
+import { LinkIcon } from "@sanity/icons/Link";
 import { isValidUrl } from "@/sanity/utils/isValidUrl";
 
 export default defineType({

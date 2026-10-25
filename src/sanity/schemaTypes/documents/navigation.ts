@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { EqualIcon } from "@sanity/icons";
+import { EqualIcon } from "@sanity/icons/Equal";
 
 export default defineType({
   name: "navigation",

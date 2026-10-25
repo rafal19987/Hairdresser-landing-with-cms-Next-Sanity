@@ -10,7 +10,7 @@ import { IllustrationWithContent } from "@/components/IllustrationWithContent";
 import { Services } from "@/components/Services";
 import { Testimonials } from "@/components/Testimonials";
 
-type Props = { params: { slug?: string[] } };
+type Props = { params: Promise<{ slug?: string[] }> };
 
 type SanitySection = { _type: string; _key?: string };
 
@@ -59,7 +59,8 @@ const fetchAllPagesSlugs = async () => {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const slug = params.slug ? `${params.slug.join("/")}` : "/";
+  const { slug: segments } = await params;
+  const slug = segments ? `${segments.join("/")}` : "/";
   const metadata = await client.fetch(
     getPageMetadata,
     { slug },
@@ -81,7 +82,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function Page({ params }: Props) {
-  const { slug } = params;
+  const { slug } = await params;
 
   const pageSlug = slug ? slug.join("/") : "/";
   const page = await client.fetch(
